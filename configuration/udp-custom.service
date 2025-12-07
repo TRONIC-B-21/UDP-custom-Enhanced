@@ -1,14 +1,13 @@
 [Unit]
-Description=UDP Custom Enhanced by Tobin
-After=network.target
+Description=UDP Custom by ePro Dev. Team
 
 [Service]
 User=root
 Type=simple
-WorkingDirectory=/root/udp
 ExecStart=/root/udp/udp-custom server
+WorkingDirectory=/root/udp/
 Restart=always
-RestartSec=2
+RestartSec=2s
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
