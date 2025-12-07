@@ -5,7 +5,7 @@ UDP (User Datagram Protocol) is a network communication protocol that operates o
 
 
 ---
-<center><img src="https://raw.githubusercontent.com/http-custom/udp-custom/main/bin/banner.jpg" alt="banner" width="400"/></center>
+<center><img src="https://raw.githubusercontent.com/http-custom/udp-custom/main/bin/banner.png" alt="banner" width="400"/></center>
 
 # Supported OS
 - ubuntu 20.04 [x86_64] ✅ _(recommended)_
