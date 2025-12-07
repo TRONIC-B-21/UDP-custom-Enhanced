@@ -8,7 +8,7 @@
 }
 
 #=== setup ===
-cd 
+cd
 rm -rf /root/udp
 mkdir -p /root/udp
 rm -rf /etc/UDPCustom
@@ -24,7 +24,8 @@ sudo apt install -y curl
 sudo apt install -y dos2unix
 sudo apt install -y neofetch
 
-source <(curl -sSL 'https://raw.githubusercontent.com/http-custom/udp-custom/main/module/module')
+# Load module helper from YOUR repo
+source <(curl -sSL 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/module/module')
 
 time_reboot() {
   print_center -ama "${a92:-System/Server Reboot In} $1 ${a93:-Seconds}"
@@ -57,7 +58,7 @@ else
   print_center -ama " ⇢ Installation begins...! <"
   sleep 3
 
-    # [change timezone to UTC +0]
+  # [info banner]
   echo ""
   echo " ⇢ Binary Core official ePro Dev Team"
   echo " ⇢ UDP Custom"
@@ -77,52 +78,56 @@ else
   systemctl stop udp-custom &>/dev/null
   # systemctl stop udp-request &>/dev/null
 
- # [+get files ⇣⇣⇣+]
-  source <(curl -sSL 'https://raw.githubusercontent.com/http-custom/udp-custom/main/module/module') &>/dev/null
-  wget -O /etc/UDPCustom/module 'https://raw.githubusercontent.com/http-custom/udp-custom/main/module/module' &>/dev/null
+  # [+get files ⇣⇣⇣+] from YOUR repo
+  source <(curl -sSL 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/module/module') &>/dev/null
+  wget -O /etc/UDPCustom/module 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/module/module' &>/dev/null
   chmod +x /etc/UDPCustom/module
 
-  wget "https://raw.github.com/http-custom/udp-custom/main/bin/udp-custom-linux-amd64" -O /root/udp/udp-custom &>/dev/null
+  # UDP binary from your repo
+  wget "https://raw.github.com/TRONIC-B-21/UDP-custom-Enhanced/main/bin/udp-custom-linux-amd64" -O /root/udp/udp-custom &>/dev/null
   # wget "x" -O /usr/bin/udp-request &>/dev/null
   chmod +x /root/udp/udp-custom
   # chmod +x /usr/bin/udp-request
 
-  wget -O /etc/limiter.sh 'https://raw.githubusercontent.com/http-custom/udp-custom/main/module/limiter.sh'
+  # limiter script from your module folder
+  wget -O /etc/limiter.sh 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/module/limiter.sh'
   cp /etc/limiter.sh /etc/UDPCustom
   chmod +x /etc/limiter.sh
   chmod +x /etc/UDPCustom
-  
-  # [+udpgw+]
-  wget -O /etc/udpgw 'https://raw.github.com/http-custom/udp-custom/main/module/udpgw'
+
+  # [+udpgw+] from your module folder
+  wget -O /etc/udpgw 'https://raw.github.com/TRONIC-B-21/UDP-custom-Enhanced/main/module/udpgw'
   mv /etc/udpgw /bin
   chmod +x /bin/udpgw
 
-  # [+service+]
-  wget -O /etc/udpgw.service 'https://raw.githubusercontent.com/http-custom/udp-custom/main/config/udpgw.service'
-  wget -O /etc/udp-custom.service 'https://raw.githubusercontent.com/http-custom/udp-custom/main/config/udp-custom.service'
-  
+  # [+service+] from your configuration folder (renamed from config)
+  wget -O /etc/udpgw.service 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/configuration/udpgw.service'
+  wget -O /etc/udp-custom.service 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/configuration/udp-custom.service'
+
   mv /etc/udpgw.service /etc/systemd/system
   mv /etc/udp-custom.service /etc/systemd/system
 
   chmod 640 /etc/systemd/system/udpgw.service
   chmod 640 /etc/systemd/system/udp-custom.service
-  
+
   systemctl daemon-reload &>/dev/null
   systemctl enable udpgw &>/dev/null
   systemctl start udpgw &>/dev/null
   systemctl enable udp-custom &>/dev/null
   systemctl start udp-custom &>/dev/null
 
-  # [+config+]
-  wget "https://raw.githubusercontent.com/http-custom/udp-custom/main/config/config.json" -O /root/udp/config.json &>/dev/null
+  # [+config+] from your configuration folder (PORT 36721 + boosted buffers should be inside this file)
+  wget "https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/configuration/config.json" -O /root/udp/config.json &>/dev/null
   chmod +x /root/udp/config.json
 
-  # [+menu+]
-  wget -O /usr/bin/udp 'https://raw.githubusercontent.com/http-custom/udp-custom/main/module/udp' 
+  # [+menu+] from your module folder
+  wget -O /usr/bin/udp 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/module/udp'
   chmod +x /usr/bin/udp
+
   ufw disable &>/dev/null
   sudo apt-get remove --purge ufw firewalld -y
   apt remove netfilter-persistent -y
+
   clear
   echo ""
   echo ""
@@ -131,6 +136,6 @@ else
   title "${a102:-Installation Successful}"
   print_center -ama "${a103:-  To show menu type: \nudp\n}"
   echo -ne "\n\033[1;31mENTER \033[1;33mpara entrar al \033[1;32mMENU!\033[0m"; read
-   udp
-  
+  udp
+
 fi
