@@ -18,7 +18,7 @@ sudo-s
 
 ```
 git clone https://github.com/TRONIC-B-21/UDP-custom-Enhanced.git
- && cd UDP-custom-Enhanced && chmod +x install.sh && ./install.sh
+cd UDP-custom-Enhanced && chmod +x install.sh && ./install.sh
 ```
 ## Manually
 
