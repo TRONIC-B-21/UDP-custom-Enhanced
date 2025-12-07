@@ -60,7 +60,7 @@ else
 
   # [info banner]
   echo ""
-  echo " ⇢ Binary Core official ePro Dev Team"
+  echo " ⇢ Binary Core Enhanced 2025"
   echo " ⇢ UDP Custom"
   sleep 3
 
@@ -100,7 +100,7 @@ else
   mv /etc/udpgw /bin
   chmod +x /bin/udpgw
 
-  # [+service+] from your configuration folder (renamed from config)
+  # [+service+] 
   wget -O /etc/udpgw.service 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/configuration/udpgw.service'
   wget -O /etc/udp-custom.service 'https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/configuration/udp-custom.service'
 
