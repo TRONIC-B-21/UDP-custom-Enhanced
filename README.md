@@ -5,31 +5,10 @@ UDP (User Datagram Protocol) is a network communication protocol that operates o
 
 
 ---
-<center><img src="https://raw.githubusercontent.com/http-custom/udp-custom/main/bin/banner.png" alt="banner" width="400"/></center>
+<center><img src="https://raw.githubusercontent.com/TRONIC-B-21/UDP-custom-Enhanced/main/bin/banner.png" alt="banner" width="400"/></center>
 
 # Supported OS
 - ubuntu 20.04 [x86_64] ✅ _(recommended)_
 - [arm] ❌
 
 ## Install
-```
-sudo -s
-``` 
-```
-git clone https://github.com/http-custom/udp-custom && cd udp-custom && chmod +x install.sh && ./install.sh
-```
-
-
-## Manually
-
-## Note: 
- * Use optional port exclude when port udp between 1-65535 already use by other udp tunnel, like badvpn, ovpn udp and other.
- * Edit path config /root/udp/config.json, after changing it then reboot
- * Optional port exclude separated by coma, ex. 53,5300
-
-## telegram
- > [magnu](https://t.me/magnui)
-
-#
-  > _made from pieces with ❤️_
-#
