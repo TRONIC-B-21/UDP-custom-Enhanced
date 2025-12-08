@@ -1,5 +1,5 @@
 #!/bin/bash
-#Version : ⇢ 1.0-Lite
+#Version : ⇢ 2.5-Lite
 udp_dir='/etc/UDPCustom'
 source $udp_dir/module
 
@@ -479,7 +479,7 @@ new_user() {
   while true; do
     msg -ne " ${a42:-Password}"
     read -p ": " userpass
-    userpass="$(echo $userpass | sed 'y/áÁàÀãÃâÂéÉêÍÍóÓõÕôÔúÚñÑçÇªº/aAaAaAaAeEeEiIoOoOoOuUnNcCao/')"
+    userpass="$(echo $userpass | sed 'y/áÁàÀãÃâÂéÉêÊíÍóÓõÕôÔúÚñÑçÇªº/aAaAaAaAeEeEiIoOoOoOuUnNcCao/')"
     if [[ -z $userpass ]]; then
       err_fun 4 && continue
     elif [[ "${#userpass}" -lt "4" ]]; then
@@ -540,7 +540,7 @@ new_user() {
 #======= CONFIGURATION OF UDP-CUSTOM & UDP-REQUEST ========
 
 make_service() {
-  ip_nat=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '^[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n 1p)
+  ip_nat=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n 1p)
   interfas=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | grep "$ip_nat" | awk {'print $NF'})
   ip_publica=$(grep -m 1 -oE '^[0-9]{1,3}(\.[0-9]{1,3}){3}$' <<<"$(wget -T 10 -t 1 -4qO- "http://ip1.dynupdate.no-ip.com/" || curl -m 10 -4Ls "http://ip1.dynupdate.no-ip.com/")")
 
@@ -564,11 +564,13 @@ EOF
   systemctl enable udp-request &>/dev/null
   systemctl start udp-request &>/dev/null
   if [[ $(systemctl is-active udp-request) = 'active' ]]; then
+    # msg -verd 'OK'
     systemctl enable udp-request &>/dev/null
   else
     msg -verm2 'fail'
   fi
   if [[ $(systemctl is-active udp-request) = 'active' ]]; then
+    # msg -verd 'OK'
     systemctl enable udp-request &>/dev/null
   else
     msg -verm2 'fail'
@@ -582,11 +584,24 @@ uninstall_udp_manager() {
   [[ $UNINS != @(Y|y|S|s) ]] && return
   systemctl stop udp-custom &>/dev/null
   systemctl disable udp-custom &>/dev/null
+  # systemctl stop udp-request &>/dev/null
+  # systemctl disable udp-request &>/dev/null
+  # systemctl stop autostart &>/dev/null
+  # systemctl disable autostart &>/dev/null
   rm -rf /etc/systemd/system/udp-custom.service
+  # rm -rf /etc/systemd/system/udp-request.service
+  # rm -rf /etc/systemd/system/autostart.service
   rm -rf /usr/bin/udp-custom
   rm -rf /root/udp/udp-custom
+  # rm -rf /root/udp/udp-request
+  # rm -rf /usr/bin/udp-request
   rm -rf /root/udp/config.json
   rm -rf /etc/UDPCustom/udp-custom
+  # rm -rf /usr/bin/udp-request
+  # rm -rf /etc/UDPCustom/autostart.service
+  # rm -rf /etc/UDPCustom/autostart
+  # rm -rf /etc/autostart.service
+  # rm -rf /etc/autostart
   rm -rf /usr/bin/udpgw
   rm -rf /etc/systemd/system/udpgw.service
   systemctl stop udpgw &>/dev/null
@@ -765,113 +780,63 @@ quit_exclude() {
   enter
 }
 
-# [Tweak UDP Speed]
+# [Tweak UDP Speed] – 10Gbps-style tuning similar to previous 1Gbps tweak
 tweak_udp_speed() {
-  # High-throughput tuning for UDP/TCP (aiming up to ~1 Gbps if VPS allows)
+  # WARNING!!!
   clear
   echo ""
   msg -bar
-  echo "$(msg -verm2 "${a3:-  A RISK TO YOUR SYSTEM}")"
-  echo "$(msg -verm2 "${a8:-  ⇢ This will aggressively tune your network stack}")"
-  echo "$(msg -verm2 "${a8:-    and may behave differently per OS image!}")"
+  echo "$(msg -verm2 "${a3:-  HIGH-RISK NETWORK TUNING}")"
+  echo "$(msg -verm2 "${a8:-  ⇢ 10Gbps-style aggressive tuning for UDP/TCP}")"
+  echo "$(msg -verm2 "${a8:-    Behaviour depends on your VPS / OS image!}")"
   sleep 2
-  echo "$(msg -verm2 "${a8:-  ⇢ Applying high-throughput patches...}")"
+  echo "$(msg -verm2 "${a8:-  ⇢ applying high-throughput tweaks...}")"
   sleep 2
 
-  # -------------------------------------------------------------------
-  # 1) Persistent sysctl tuning for high throughput
-  # -------------------------------------------------------------------
-  TUNE_FILE="/etc/sysctl.d/99-udp-udpmanager-tuning.conf"
+  # Turn off TCP Timestamps to reduce overhead
+  echo 0 >/proc/sys/net/ipv4/tcp_timestamps 2>/dev/null
 
-  cat > "$TUNE_FILE" << 'EOF'
-# ===== UDP / TCP High Throughput Tuning (UDP-Manager) =====
+  # Increase core backlog / queue sizes (for high PPS / Gbps)
+  echo 250000 >/proc/sys/net/core/somaxconn 2>/dev/null
+  echo 500000 >/proc/sys/net/core/netdev_max_backlog 2>/dev/null
 
-# Disable TCP timestamps (slightly lower overhead)
-net.ipv4.tcp_timestamps = 0
+  # Increase maximum amount of memory available for network buffers (256MB)
+  echo 268435456 >/proc/sys/net/core/wmem_max 2>/dev/null
+  echo 268435456 >/proc/sys/net/core/rmem_max 2>/dev/null
 
-# Queue sizes / backlog
-net.core.netdev_max_backlog = 250000
-net.core.somaxconn = 65535
+  # Larger TCP default and max buffers for 10Gbps-style throughput
+  echo "4096 87380 268435456" >/proc/sys/net/ipv4/tcp_rmem 2>/dev/null
+  echo "4096 65536 268435456" >/proc/sys/net/ipv4/tcp_wmem 2>/dev/null
 
-# Default + max socket buffers (system-wide)
-net.core.rmem_default = 262144
-net.core.wmem_default = 262144
-net.core.rmem_max     = 134217728
-net.core.wmem_max     = 134217728
+  # UDP minimum buffers
+  echo 16384 >/proc/sys/net/ipv4/udp_rmem_min 2>/dev/null
+  echo 16384 >/proc/sys/net/ipv4/udp_wmem_min 2>/dev/null
 
-# TCP buffer tuning (min, default, max)
-net.ipv4.tcp_rmem = 4096 87380 134217728
-net.ipv4.tcp_wmem = 4096 65536 134217728
+  # Increase backlog and lower FIN timeout for many short-lived flows
+  echo 8192 >/proc/sys/net/ipv4/tcp_max_syn_backlog 2>/dev/null
+  echo 15 >/proc/sys/net/ipv4/tcp_fin_timeout 2>/dev/null
 
-# UDP memory tuning
-net.ipv4.udp_mem      = 3145728 4194304 16777216
-net.ipv4.udp_rmem_min = 8192
-net.ipv4.udp_wmem_min = 8192
+  # Open up ephemeral port range to handle many connections
+  echo "10240 65535" >/proc/sys/net/ipv4/ip_local_port_range 2>/dev/null
 
-# Enable MTU probing to avoid black hole issues
-net.ipv4.tcp_mtu_probing = 1
-
-# Allow more TIME-WAIT sockets (useful on high conn. rates)
-net.ipv4.tcp_max_syn_backlog = 4096
-net.ipv4.tcp_fin_timeout = 15
-
-# Let the kernel reuse TIME-WAIT sockets when safe
-net.ipv4.tcp_tw_reuse = 1
-
-# Fair queuing + BBR (if available, the script will enable)
-# net.core.default_qdisc = fq
-# net.ipv4.tcp_congestion_control = bbr
-EOF
-
-  # -------------------------------------------------------------------
-  # 2) Enable BBR + fq if available on this kernel
-  # -------------------------------------------------------------------
-  if modprobe tcp_bbr 2>/dev/null || lsmod | grep -q 'tcp_bbr'; then
-    # fq qdisc is usually available; we just set it in sysctl
-    sed -i '/^net.core.default_qdisc/d' "$TUNE_FILE"
-    sed -i '/^net.ipv4.tcp_congestion_control/d' "$TUNE_FILE"
-    {
-      echo "net.core.default_qdisc = fq"
-      echo "net.ipv4.tcp_congestion_control = bbr"
-    } >> "$TUNE_FILE"
-  else
-    # fallback: make sure congestion control is at least cubic
-    sed -i '/^net.ipv4.tcp_congestion_control/d' "$TUNE_FILE"
-    echo "net.ipv4.tcp_congestion_control = cubic" >> "$TUNE_FILE"
+  # Enable BBR if available (better high-bandwidth performance)
+  if grep -qw bbr /proc/sys/net/ipv4/tcp_available_congestion_control 2>/dev/null; then
+    echo bbr >/proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null
   fi
 
-  # -------------------------------------------------------------------
-  # 3) Apply sysctl settings immediately
-  # -------------------------------------------------------------------
-  if command -v sysctl >/dev/null 2>&1; then
-    sysctl --system >/dev/null 2>&1
-  fi
+  # Increase the maximum number of open files per process (session only)
+  ulimit -n 1048576 2>/dev/null
 
-  # -------------------------------------------------------------------
-  # 4) Raise file descriptor limits (soft + hard) for all users
-  # -------------------------------------------------------------------
-  LIMITS_FILE="/etc/security/limits.conf"
-  for line in \
-    "* soft nofile 65535" \
-    "* hard nofile 65535"; do
-    grep -qF "$line" "$LIMITS_FILE" 2>/dev/null || echo "$line" >> "$LIMITS_FILE"
-  done
-
-  # Raise current shell/session limit (non-persistent)
-  ulimit -n 65535 2>/dev/null
-
-  # -------------------------------------------------------------------
-  # 5) Gently restart networking if possible (no hard failures)
-  # -------------------------------------------------------------------
-  if systemctl list-unit-files | grep -q '^NetworkManager\.service'; then
-    systemctl restart NetworkManager >/dev/null 2>&1 || true
-  elif systemctl list-unit-files | grep -q '^systemd-networkd\.service'; then
-    systemctl restart systemd-networkd >/dev/null 2>&1 || true
+  # Soft network restart (similar behaviour to previous tweak)
+  if systemctl list-unit-files 2>/dev/null | grep -q '^NetworkManager\.service'; then
+    systemctl restart NetworkManager &>/dev/null
+  elif systemctl list-unit-files 2>/dev/null | grep -q '^systemd-networkd\.service'; then
+    systemctl restart systemd-networkd &>/dev/null
   fi
 
   sleep 2
-  echo "${a6:-  ⇢ High-throughput UDP/TCP tuning applied.}"
-  echo "${a6:-  ⇢ If your VPS plan allows it, you can now approach 1 Gbps line speed.}"
+  echo "${a6:-  ⇢ 10Gbps-style tuning applied on this server.}"
+  echo "${a6:-  ⇢ Real speed still depends on your VPS NIC and ISP line.}"
   msg -bar0
   sleep 3
 }
@@ -942,6 +907,7 @@ menu_udp_request() {
   fi
   ram=$(printf '%-8s' "$(free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }')")
   cpu=$(printf '%-1s' "$(top -bn1 | awk '/Cpu/ { cpu = "" 100 - $8 "%" }; END { print cpu }')")
+  # print_center -ama " $(msg -verd 'IP:') $(msg -azu "$request_public_ip")  $(msg -verd 'Ram:') $(msg -azu "$ram") $(msg -verd 'CPU:') $(msg -azu "$cpu")"
   echo " $(msg -verd ' ⇢  IP:') $(msg -azu "$request_public_ip")  $(msg -verd 'Ram:') $(msg -azu "$ram") $(msg -verd 'CPU:') $(msg -azu "$cpu")"
   msg -bar
 
@@ -995,6 +961,7 @@ menu_udp_request() {
 
 # [UDP - Custom]
 menu_udp_custom() {
+  # title "\033[3;40m${a10:-•UDP Custom | UDP Request Manager} •"
   title_sub "\033[3;40m${a10:-•UDP Custom Manager} •"
   print_center -ama ' Version: 2.5-Lite'
   print_center -ama ' UDP CUSTOM'
@@ -1024,6 +991,7 @@ menu_udp_custom() {
   echo " $(msg -verd "[7]") $(msg -verm2 '>') $(msg -teal "${a11:-Limit Accounts}")"
   msg -bar3
   back
+  # option=$(selection_fun $num)
   read -p " ⇢  Enter your selection: " option
 
   case $option in
@@ -1040,6 +1008,7 @@ menu_udp_custom() {
 
 # [MAIN MENU]A
 menu_main() {
+  # title "\033[3;40m${a10:-• UDP Custom | UDP Request Manager} •"
   main_title "\033[3;40m${a10:-• UDP Custom Manager} •"
   print_center -ama 'Version: 2.5-Lite'
   print_center -ama 'Tunnel App : HTTP Custom'
