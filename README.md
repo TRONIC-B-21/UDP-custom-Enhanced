@@ -13,7 +13,7 @@ UDP (User Datagram Protocol) is a network communication protocol that operates o
 
 ## Install
 ```
-sudo-s
+sudo -s
 ```
 
 ```
